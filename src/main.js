@@ -13,7 +13,7 @@ document.querySelector('#app').innerHTML = `
   </div>
   <div>
     <h1>欢迎来到我的第一个网站</h1>
-    <p>Edit <code>src/main.js</code> and save to test <code>HMR</code></p>
+    <p>这个网站已经通过 Netlify 自动发布。</p>
   </div>
   <button id="counter" type="button" class="counter"></button>
 </section>
