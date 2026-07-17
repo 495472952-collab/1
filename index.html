@@ -1,14 +1,734 @@
-<!doctype html>
-<html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="帆船索具与船体数据分析仪表盘。" />
-    <title>HarborIQ · Sail Analytics</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
-</html>
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        try {
+            tailwind.config = {
+                darkMode: "class",
+                theme: {
+                    extend: {
+                        colors: {
+                            "primary": "#3B82F6",
+                            "on-primary": "#FFFFFF",
+                            "background": "#0B1015",
+                            "surface": "#111821",
+                            "surface-container": "#111821",
+                            "surface-container-low": "#171c21",
+                            "outline": "#1F2937",
+                            "outline-variant": "#1F2937",
+                            "on-surface": "#FFFFFF",
+                            "on-surface-variant": "#94A3B8"
+                        },
+                        spacing: {
+                            "margin-desktop": "32px",
+                            "sm": "8px",
+                            "md": "16px",
+                            "xl": "40px",
+                            "lg": "24px",
+                            "base": "4px",
+                            "xs": "4px",
+                            "margin-mobile": "16px",
+                            "gutter": "16px"
+                        },
+                        fontFamily: {
+                            "headline": ["IBM Plex Sans", "sans-serif"],
+                            "body": ["Inter", "sans-serif"],
+                            "data-mono": ["Inter", "monospace"]
+                        },
+                        fontSize: {
+                            "display-lg": ["48px", {lineHeight: "1.1", letterSpacing: "-0.02em", fontWeight: "700"}],
+                            "headline-lg": ["32px", {lineHeight: "1.2", fontWeight: "600"}],
+                            "headline-md": ["20px", {lineHeight: "1.4", fontWeight: "500"}],
+                            "label-caps": ["12px", {lineHeight: "1.0", letterSpacing: "0.05em", fontWeight: "600"}],
+                            "body-lg": ["16px", {lineHeight: "1.6", fontWeight: "400"}],
+                            "body-md": ["14px", {lineHeight: "1.5", fontWeight: "400"}],
+                            "body-sm": ["13px", {lineHeight: "1.4", fontWeight: "400"}]
+                        },
+                        borderRadius: {
+                            "none": "0px"
+                        }
+                    }
+                }
+            };
+        } catch (_e) {}
+    </script>
+<style>
+        * { border-radius: 0px !important; }
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+        .active-profile { background-color: #3B82F6; color: white; }
+        .selected-package { border-color: #3B82F6 !important; border-width: 2px !important; }
+        .sail-included { border-color: #3B82F6 !important; position: relative; }
+        .profile-track { position: relative; height: 7px; background: rgba(31, 41, 55, .8); }
+        .profile-range { position: absolute; top: 0; height: 7px; background: #1677E8; }
+        .profile-median { position: absolute; top: -4px; width: 2px; height: 15px; background: #FFFFFF; transform: translateX(-1px); }
+        .profile-card { min-width: 0; }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body">
+<!-- Top Navigation Bar -->
+<nav class="flex justify-between items-center px-margin-desktop w-full h-20 max-w-[1440px] mx-auto border-b border-outline bg-background sticky top-0 z-50">
+<div class="flex items-center gap-xl">
+<span class="font-headline text-headline-md font-bold text-on-surface tracking-tighter">SurgeX</span>
+<div class="hidden md:flex gap-lg">
+<a class="text-primary border-b-2 border-primary font-bold pb-1 font-label-caps text-label-caps" href="#">Boats</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors font-label-caps text-label-caps" href="#">Passport</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors font-label-caps text-label-caps" href="#">Docs</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors font-label-caps text-label-caps" href="#">My Sails</a>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="material-symbols-outlined p-2 hover:bg-surface transition-colors text-on-surface-variant">search</button>
+<div class="flex items-center gap-sm pl-4 border-l border-outline">
+<span class="font-label-caps text-label-caps font-bold text-on-surface">AARON</span>
+<div class="w-8 h-8 bg-surface border border-outline overflow-hidden">
+<img alt="User" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbhsAAti0B2ecQdxEAoBym9KfW9UEwJshM-4Lck_Az32WvfZGuw1Ctpieo-MfVTSQuw0wx8iD-aN20N3X84r99Uje_SMiwvjLKHYdJdsLX0VxFy4qgacI8RmHnczw56tc65cyKQjKq-85onnb7rzNH9ncQbGFYDAkri1HfdNcyOqL3JR-qfEzQ3byBaa9C9pq9wPoPwd8AEcy-6a20H6LItfl_UDnWtAEf4yFzXLcOF0PpBW9TRaXNFY1244FSgLNh72d3N1w4JIhA">
+</div>
+</div>
+</div>
+</nav>
+<main class="max-w-[1440px] mx-auto px-margin-desktop py-xl">
+<!-- Boat Intro -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-xl items-center mb-xl">
+<div>
+<h1 class="font-headline text-display-lg text-on-surface mb-xs uppercase tracking-tight">FIRST 40.7</h1>
+<p class="font-body text-on-surface-variant mb-xl">Performance Racer-Cruiser • 1997 – 2008 • Farr Yacht Design</p>
+<p class="font-body text-on-surface-variant text-body-md mb-xl max-w-2xl">The FIRST 40.7 is a benchmark racer-cruiser designed by Bruce Farr, blending a competitive hull form with functional accommodations. It targets the performance-oriented market, excelling in both offshore IRC/ORC racing and fast coastal cruising.</p>
+<div class="flex gap-xl">
+<div class="border-l-2 border-primary pl-lg">
+<span class="block font-headline text-headline-lg text-on-surface">1,187</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">VERIFIED BOATS</span>
+</div>
+<div class="border-l-2 border-primary pl-lg">
+<span class="block font-headline text-headline-lg text-on-surface">5,168</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">SAIL RECORDS</span>
+</div>
+</div>
+</div>
+<div class="relative bg-surface overflow-hidden border border-outline">
+<img alt="FIRST 40.7 Boat" class="w-full h-auto object-cover" src="/images/first-407.jpg">
+</div>
+</section>
+<!-- Technical Data Grid -->
+<section class="grid grid-cols-1 lg:grid-cols-[minmax(0,2.35fr)_minmax(300px,0.65fr)] gap-gutter mb-xl">
+<!-- Column 1: Hull Data -->
+<div class="bg-surface border border-outline flex flex-col min-w-0">
+<div class="px-lg py-md border-b border-outline bg-surface-container-low flex items-center justify-between gap-md"><h3 class="font-label-caps text-label-caps font-bold text-on-surface uppercase">Rig Geometry</h3><span class="font-data-mono text-[10px] text-on-surface-variant uppercase tracking-widest">Class reference drawing</span></div>
+<div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1.8fr)_minmax(300px,0.8fr)] flex-1 min-w-0">
+<!-- Enlarged Diagram -->
+<div class="min-h-[460px] xl:min-h-[590px] p-sm md:p-md flex flex-col items-center justify-center border-b xl:border-b-0 xl:border-r border-outline bg-background/50 overflow-hidden">
+<img alt="Rig Geometry Diagram" class="w-full h-[440px] md:h-[520px] xl:h-[570px] object-contain scale-[1.08]" src="/images/rig-diagram.png">
+<p class="text-[10px] text-on-surface-variant mt-sm">Reference geometry — verify the individual rig variant before use.</p>
+</div>
+<!-- Reordered Geometry Metrics -->
+<div class="bg-surface-container-low/30 min-w-0">
+<div class="px-md py-sm border-b border-outline"><span class="font-label-caps text-[10px] text-primary uppercase tracking-widest">Hull dimensions</span></div>
+<div class="grid grid-cols-2 border-b border-outline">
+<div class="p-md border-r border-b border-outline"><span class="block text-[10px] text-on-surface-variant uppercase tracking-widest">LOA</span><span class="block font-data-mono text-body-lg font-bold mt-1">10.640 m</span></div>
+<div class="p-md border-b border-outline"><span class="block text-[10px] text-on-surface-variant uppercase tracking-widest">LWL</span><span class="block font-data-mono text-body-lg font-bold mt-1">9.650 m</span></div>
+<div class="p-md border-r border-b border-outline"><span class="block text-[10px] text-on-surface-variant uppercase tracking-widest">Beam</span><span class="block font-data-mono text-body-lg font-bold mt-1">3.458 m</span></div>
+<div class="p-md border-b border-outline"><span class="block text-[10px] text-on-surface-variant uppercase tracking-widest">Draft</span><span class="block font-data-mono text-body-lg font-bold mt-1">2.236 m</span></div>
+<div class="p-md col-span-2"><span class="block text-[10px] text-on-surface-variant uppercase tracking-widest">Displacement</span><span class="block font-data-mono text-body-lg font-bold mt-1">5,860 kg</span></div>
+</div>
+<div class="px-md py-sm border-b border-outline"><span class="font-label-caps text-[10px] text-primary uppercase tracking-widest">Rig dimensions</span></div>
+<div class="grid grid-cols-2">
+<div class="p-md border-r border-b border-outline"><span class="block text-[10px] text-on-surface-variant uppercase tracking-widest">P</span><span class="block font-data-mono text-body-lg font-bold mt-1">13.79 m</span><span class="text-[9px] text-on-surface-variant">Mainsail luff</span></div>
+<div class="p-md border-b border-outline"><span class="block text-[10px] text-on-surface-variant uppercase tracking-widest">E</span><span class="block font-data-mono text-body-lg font-bold mt-1">4.74 m</span><span class="text-[9px] text-on-surface-variant">Mainsail foot</span></div>
+<div class="p-md border-r border-b border-outline"><span class="block text-[10px] text-on-surface-variant uppercase tracking-widest">I</span><span class="block font-data-mono text-body-lg font-bold mt-1">14.18 m</span><span class="text-[9px] text-on-surface-variant">Forestay</span></div>
+<div class="p-md border-b border-outline"><span class="block text-[10px] text-on-surface-variant uppercase tracking-widest">J</span><span class="block font-data-mono text-body-lg font-bold mt-1">3.99 m</span><span class="text-[9px] text-on-surface-variant">Fore triangle</span></div>
+<div class="p-md border-r border-outline"><span class="block text-[10px] text-on-surface-variant uppercase tracking-widest">ISP</span><span class="block font-data-mono text-body-lg font-bold mt-1">14.28 m</span></div>
+<div class="p-md"><span class="block text-[10px] text-on-surface-variant uppercase tracking-widest">TPS</span><span class="block font-data-mono text-body-lg font-bold mt-1">2.51 m</span></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Column 2: Rig Geometry -->
+<!-- Column 3: Evidence Coverage -->
+<div class="bg-surface border border-outline flex flex-col">
+<div class="px-lg py-md border-b border-outline bg-surface-container-low flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">check_circle</span>
+<h3 class="font-label-caps text-label-caps font-bold text-on-surface uppercase">Evidence Coverage</h3>
+</div>
+<div class="p-lg flex-1 flex flex-col gap-4">
+<div class="space-y-2">
+<div class="flex justify-between items-end">
+<span class="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest">Identified Boats</span>
+<span class="font-data-mono text-on-surface text-[11px]">238 / 1,052 (23%)</span>
+</div>
+<div class="w-full bg-outline h-1.5">
+<div class="bg-primary h-full w-[23%]"></div>
+</div>
+</div>
+<div class="flex flex-col divide-y divide-outline/30">
+<div class="flex justify-between py-2"><span class="text-on-surface-variant text-body-sm">Source rows analyzed</span><span class="font-data-mono font-bold">5,158</span></div>
+<div class="flex justify-between py-2"><span class="text-on-surface-variant text-body-sm">Rows accepted for analysis</span><span class="font-data-mono font-bold">4,871</span></div>
+<div class="flex justify-between py-2"><span class="text-on-surface-variant text-body-sm">Accepted profile members</span><span class="font-data-mono font-bold">4,452</span></div>
+<div class="flex justify-between py-2"><span class="text-on-surface-variant text-body-sm">Candidate profile members</span><span class="font-data-mono font-bold">786</span></div>
+<div class="flex justify-between py-2"><span class="text-on-surface-variant text-body-sm">Explicitly labeled rows</span><span class="font-data-mono font-bold">111</span></div>
+</div>
+<div class="mt-auto pt-4 border-t border-outline">
+<span class="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest block mb-2">Certificate Sources</span>
+<div class="flex gap-2">
+<span class="bg-surface-container-low border border-outline px-2 py-1 text-[10px] font-bold"><span class="text-on-surface-variant">IRC</span> <span class="text-primary">57</span></span>
+<span class="bg-surface-container-low border border-outline px-2 py-1 text-[10px] font-bold"><span class="text-on-surface-variant">ORC</span> <span class="text-primary">5,101</span></span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Step 1: SELECT YOUR SAILING PROFILE -->
+<!-- Choose How You Sail Section -->
+<section class="mb-xl">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-lg gap-4">
+<div>
+<div class="flex items-center gap-2 text-primary mb-2">
+<span class="font-label-caps text-[11px] font-bold uppercase tracking-widest">Data-Matched Recommendations</span>
+</div>
+<h2 class="font-headline text-display-lg uppercase tracking-tight text-on-surface">Explore sailing profiles</h2>
+<p class="font-body text-on-surface-variant text-body-md max-w-2xl mt-2">Three starting configurations built from 5,168 verified FIRST 40.7 sail records. Final dimensions are checked against your actual rig before production.</p>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant bg-surface-container-low border border-outline px-3 py-2">
+<span class="text-[11px] font-medium">Data from Offshore Racing Congress</span>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-lg">
+<!-- Cruising Essential (CHARTER Profile) -->
+<div class="bg-surface border border-outline p-xl flex flex-col transition-all" id="pkg-CHARTER">
+<div class="flex justify-between items-start mb-8">
+<div>
+<span class="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest block mb-2">Easy Handling</span>
+<h3 class="font-headline text-headline-md text-on-surface">Cruising Essential</h3>
+</div>
+</div>
+<p class="text-on-surface-variant text-body-sm mb-8">A durable, forgiving setup for coastal cruising and short-handed sailing.</p>
+<div class="space-y-4 mb-xl flex-1">
+<div class="flex justify-between border-b border-outline/30 pb-2">
+<span class="text-on-surface-variant text-[11px] uppercase">Typical sail mix</span>
+<span class="text-on-surface text-body-sm font-bold">Standard Main + G1</span>
+</div>
+<div class="flex justify-between border-b border-outline/30 pb-2">
+<span class="text-on-surface-variant text-[11px] uppercase">Best for</span>
+<span class="text-on-surface text-body-sm font-bold">Coastal cruising</span>
+</div>
+</div>
+<button class="w-full border border-primary text-primary hover:bg-primary hover:text-on-primary transition-all py-3 text-[11px] font-bold uppercase tracking-widest" id="btn-CHARTER">View this profile</button>
+</div>
+<!-- Performance Cruise (CRUISING Profile - DEFAULT) -->
+<div class="bg-surface border border-primary p-xl flex flex-col relative transition-all selected-package" id="pkg-CRUISING">
+<div class="absolute top-0 right-0 bg-primary text-on-primary px-3 py-1 text-[10px] font-bold uppercase tracking-widest" id="badge-CRUISING">Most Selected</div>
+<div class="flex justify-between items-start mb-8">
+<div>
+<span class="font-label-caps text-[10px] text-primary uppercase tracking-widest block mb-2">Balanced Performance</span>
+<h3 class="font-headline text-headline-md text-on-surface">Performance Cruise</h3>
+</div>
+</div>
+<p class="text-on-surface-variant text-body-sm mb-8">The most versatile inventory for fast cruising, offshore passages and club racing.</p>
+<div class="space-y-4 mb-xl flex-1">
+<div class="flex justify-between border-b border-outline/30 pb-2">
+<span class="text-on-surface-variant text-[11px] uppercase">Typical sail mix</span>
+<span class="text-on-surface text-body-sm font-bold">Full Roach Main + J2 + S2</span>
+</div>
+<div class="flex justify-between border-b border-outline/30 pb-2">
+<span class="text-on-surface-variant text-[11px] uppercase">Best for</span>
+<span class="text-on-surface text-body-sm font-bold">Fast cruise + club race</span>
+</div>
+</div>
+<button class="w-full bg-primary text-on-primary transition-all py-3 text-[11px] font-bold uppercase tracking-widest" id="btn-CRUISING">Active profile</button>
+</div>
+<!-- Race Optimized (RACING Profile) -->
+<div class="bg-surface border border-outline p-xl flex flex-col transition-all" id="pkg-RACING">
+<div class="flex justify-between items-start mb-8">
+<div>
+<span class="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest block mb-2">Maximum Speed</span>
+<h3 class="font-headline text-headline-md text-on-surface">Race Optimized</h3>
+</div>
+</div>
+<p class="text-on-surface-variant text-body-sm mb-8">A broader wind-range inventory designed for IRC/ORC campaigns and serious crews.</p>
+<div class="space-y-4 mb-xl flex-1">
+<div class="flex justify-between border-b border-outline/30 pb-2">
+<span class="text-on-surface-variant text-[11px] uppercase">Typical sail mix</span>
+<span class="text-on-surface text-body-sm font-bold">Full Roach + J1/J2 + S1.5/S2</span>
+</div>
+<div class="flex justify-between border-b border-outline/30 pb-2">
+<span class="text-on-surface-variant text-[11px] uppercase">Best for</span>
+<span class="text-on-surface text-body-sm font-bold">IRC / ORC racing</span>
+</div>
+</div>
+<button class="w-full border border-primary text-primary hover:bg-primary hover:text-on-primary transition-all py-3 text-[11px] font-bold uppercase tracking-widest" id="btn-RACING">View this profile</button>
+</div>
+</div>
+<!-- Active Usage Profile Summary -->
+<div class="mb-lg">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-md" id="active-profile-sails-grid">
+<!-- Full Roach Main -->
+<div class="bg-surface border border-outline p-4 flex flex-col relative">
+<div class="h-32 flex items-center justify-center mb-4">
+<img alt="Main Sail" class="h-full object-contain invert brightness-200" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBV-M2HtuBjTUQDe29Pdyx20aRzs1s0kd6bY9Qi-_sdLKkgKCSfKBJiwQLuYtfdeMIgfwpxd88MQrr4pxKuu2uI20QKijcC6gFODRR-kl3r2xdgaCGBzuFT8FZISc3EqAHoJDl3XDDenKIO__BN2M0xRTnLM_rywdsbdDpZWOEbotHC0HLcPe4-DBb6ZZ1ElDA2Iz0y_0Wu-9Hr7f0NVQmtfrmBP0X0rdTcMdK5Q3yFEs6WQfAF_FqWFjtSuu2WqtyOyhBmt9n_6g">
+</div>
+<div class="mb-4">
+<div class="text-[10px] text-primary font-bold uppercase tracking-widest mb-1">Mainsail</div>
+<h4 class="font-headline text-body-lg font-bold">Full Roach Main</h4>
+<p class="text-on-surface-variant text-[11px]">Powered performance mainsail</p>
+</div>
+<div class="grid grid-cols-3 gap-2 border border-outline/30 p-2 mb-4">
+<div><div class="text-[9px] text-on-surface-variant uppercase">Area</div><div class="text-body-sm font-bold">48.2m²</div></div>
+<div><div class="text-[9px] text-on-surface-variant uppercase">Luff</div><div class="text-body-sm font-bold">14.49m</div></div>
+<div><div class="text-[9px] text-on-surface-variant uppercase">Foot</div><div class="text-body-sm font-bold">5.40m</div></div>
+</div>
+<button class="w-full border border-outline py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-surface-container-low transition-colors">View Detailed Data</button>
+</div>
+<!-- J2 -->
+<div class="bg-surface border border-outline p-4 flex flex-col relative">
+<div class="h-32 flex items-center justify-center mb-4">
+<img alt="Headsail" class="h-full object-contain invert brightness-200" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBV-M2HtuBjTUQDe29Pdyx20aRzs1s0kd6bY9Qi-_sdLKkgKCSfKBJiwQLuYtfdeMIgfwpxd88MQrr4pxKuu2uI20QKijcC6gFODRR-kl3r2xdgaCGBzuFT8FZISc3EqAHoJDl3XDDenKIO__BN2M0xRTnLM_rywdsbdDpZWOEbotHC0HLcPe4-DBb6ZZ1ElDA2Iz0y_0Wu-9Hr7f0NVQmtfrmBP0X0rdTcMdK5Q3yFEs6WQfAF_FqWFjtSuu2WqtyOyhBmt9n_6g">
+</div>
+<div class="mb-4">
+<div class="text-[10px] text-primary font-bold uppercase tracking-widest mb-1">Headsail</div>
+<h4 class="font-headline text-body-lg font-bold">J2</h4>
+<p class="text-on-surface-variant text-[11px]">Primary medium-air headsail</p>
+</div>
+<div class="grid grid-cols-3 gap-2 border border-outline/30 p-2 mb-4">
+<div><div class="text-[9px] text-on-surface-variant uppercase">Area</div><div class="text-body-sm font-bold">38.5m²</div></div>
+<div><div class="text-[9px] text-on-surface-variant uppercase">Luff</div><div class="text-body-sm font-bold">15.20m</div></div>
+<div><div class="text-[9px] text-on-surface-variant uppercase">Foot</div><div class="text-body-sm font-bold">4.80m</div></div>
+</div>
+<button class="w-full border border-outline py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-surface-container-low transition-colors">View Detailed Data</button>
+</div>
+<!-- S1.5 -->
+<div class="bg-surface border border-outline p-4 flex flex-col relative">
+<div class="h-32 flex items-center justify-center mb-4">
+<img alt="Spinnaker" class="h-full object-contain invert brightness-200" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCI4Kxlb2z15GY4Qg4e0Z_HEhMZCEQVuy74YAXDBfhZJSAfxafd2TLCks7k6DMYcaKKQagi7vxiFidyv8YxqkSXUiCnY8Mc_YwZFXvJhhBxiwpSSfVDN2QnkE2O32TzFplXE_LJ5uB7Ht6BPY6f-al2qiU7AbpUpbIgVRL9Cgqxk7dySIRXiVcNGQRh4JgFWjspRrUT4XO1M5E8dUYrvctjn4Q6XqsJIbYatGZSHya8-UIp3_-XX3Yrbl4ro5uxewWTIVQKXR137Q">
+</div>
+<div class="mb-4">
+<div class="text-[10px] text-primary font-bold uppercase tracking-widest mb-1">Spinnaker</div>
+<h4 class="font-headline text-body-lg font-bold">S1.5</h4>
+<p class="text-on-surface-variant text-[11px]">Light-to-medium downwind sail</p>
+</div>
+<div class="grid grid-cols-3 gap-2 border border-outline/30 p-2 mb-4">
+<div><div class="text-[9px] text-on-surface-variant uppercase">Area</div><div class="text-body-sm font-bold">110.2m²</div></div>
+<div><div class="text-[9px] text-on-surface-variant uppercase">Luff</div><div class="text-body-sm font-bold">15.80m</div></div>
+<div><div class="text-[9px] text-on-surface-variant uppercase">Foot</div><div class="text-body-sm font-bold">8.20m</div></div>
+</div>
+<button class="w-full border border-outline py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-surface-container-low transition-colors">View Detailed Data</button>
+</div>
+<!-- S2 -->
+<div class="bg-surface border border-outline p-4 flex flex-col relative">
+<div class="h-32 flex items-center justify-center mb-4">
+<img alt="Spinnaker" class="h-full object-contain invert brightness-200" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCI4Kxlb2z15GY4Qg4e0Z_HEhMZCEQVuy74YAXDBfhZJSAfxafd2TLCks7k6DMYcaKKQagi7vxiFidyv8YxqkSXUiCnY8Mc_YwZFXvJhhBxiwpSSfVDN2QnkE2O32TzFplXE_LJ5uB7Ht6BPY6f-al2qiU7AbpUpbIgVRL9Cgqxk7dySIRXiVcNGQRh4JgFWjspRrUT4XO1M5E8dUYrvctjn4Q6XqsJIbYatGZSHya8-UIp3_-XX3Yrbl4ro5uxewWTIVQKXR137Q">
+</div>
+<div class="mb-4">
+<div class="text-[10px] text-primary font-bold uppercase tracking-widest mb-1">Spinnaker</div>
+<h4 class="font-headline text-body-lg font-bold">S2</h4>
+<p class="text-on-surface-variant text-[11px]">Primary downwind runner</p>
+</div>
+<div class="grid grid-cols-3 gap-2 border border-outline/30 p-2 mb-4">
+<div><div class="text-[9px] text-on-surface-variant uppercase">Area</div><div class="text-body-sm font-bold">107.4m²</div></div>
+<div><div class="text-[9px] text-on-surface-variant uppercase">Luff</div><div class="text-body-sm font-bold">15.67m</div></div>
+<div><div class="text-[9px] text-on-surface-variant uppercase">Foot</div><div class="text-body-sm font-bold">8.05m</div></div>
+</div>
+<button class="w-full border border-outline py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-surface-container-low transition-colors">View Detailed Data</button>
+</div>
+</div>
+<div class="flex flex-col md:flex-row justify-between items-center gap-4">
+</div>
+</div><div class="w-full bg-primary/10 border border-primary/30 px-lg py-3 flex flex-col md:flex-row justify-between items-center gap-2" id="recommendation-bar">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">info</span>
+<p class="text-body-sm font-medium"><span class="font-bold">ACTIVE USAGE PROFILE:</span> <span id="rec-name">Performance Cruise</span> | <span class="text-on-surface-variant" id="rec-details">Full Roach Main, J2 and S2 are the typical profiles associated with this usage group.</span></p>
+</div>
+<div class="font-label-caps text-[11px] font-bold text-primary uppercase tracking-widest"><span id="rec-count">3</span> TYPICAL PROFILES</div>
+</div>
+<p class="text-[10px] text-on-surface-variant mt-4">Usage profiles summarize patterns in the verified class dataset. They do not represent an individual boat specification.</p>
+</section>
+<!-- Legacy flat sail lists retained as hidden source markup -->
+<div class="hidden" aria-hidden="true">
+<!-- Upwind Sails Section -->
+<section class="mb-xl space-y-6">
+<div class="flex justify-between items-end mb-lg border-b border-outline pb-sm">
+<div class="flex items-center gap-md">
+<h2 class="font-headline text-headline-md uppercase tracking-widest text-on-surface">Upwind Sails <span class="font-body text-on-surface-variant lowercase" style="font-size: 13px; font-family: Inter, monospace;">(8 configurations)</span></h2>
+</div>
+<div class="flex items-center gap-lg"><button class="border border-outline text-on-surface-variant px-4 py-2 text-[11px] font-bold uppercase tracking-wider flex items-center gap-2 hover:bg-surface-container-low transition-colors">
+  <span class="material-symbols-outlined text-sm">expand_more</span>
+  Expand all
+</button>
+<div class="flex gap-sm">
+
+
+</div>
+<button class="bg-primary text-on-primary px-4 py-2 text-[11px] font-bold uppercase tracking-wider flex items-center gap-2"><span class="material-symbols-outlined text-sm">playlist_add</span> Keyword filtering</button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter pb-4"><!-- Standard Main -->
+<div class="bg-surface border border-outline flex flex-col w-full sail-card p-4" id="sail-STANDARD-MAIN"><div class="flex justify-between items-start mb-6"><div class="flex flex-col gap-2"><h4 class="font-headline text-headline-lg text-primary uppercase tracking-tight">Standard Main</h4><p class="text-on-surface-variant text-body-md">Baseline cruising mainsail</p></div><div class="w-24 h-32 relative"><svg viewBox="0 0 100 150" class="w-full h-full"><path d="M 50 10 Q 90 140 85 145 L 15 145 Q 10 140 50 10" fill="rgba(59, 130, 246, 0.1)" stroke="#3B82F6" stroke-width="1"></path></svg></div></div><div class="flex justify-between items-center mb-6"><span class="bg-primary/20 text-primary px-2 py-1 text-[10px] font-bold uppercase tracking-widest border border-primary/30">CONFIRMED</span><span class="font-data-mono text-[11px] text-on-surface-variant">n=1,434</span></div><div class="flex gap-2 mb-8"><div class="flex items-center gap-1 px-2 py-1 bg-surface-container-low border border-outline text-[10px] font-bold text-on-surface-variant"><span class="material-symbols-outlined text-[14px]">explore</span> CRUISING</div><div class="flex items-center gap-1 px-2 py-1 bg-surface-container-low border border-outline text-[10px] font-bold text-on-surface-variant"><span class="material-symbols-outlined text-[14px]">speed</span> PERFORMANCE CRUISE</div></div><div class="space-y-8 mb-8"><div class="space-y-2"><div class="flex justify-between items-end"><span class="text-on-surface-variant text-[11px] uppercase tracking-wider">Area</span><span class="text-on-surface font-data-mono text-body-md">MEDIAN <span class="font-bold">47.1m²</span></span></div><div class="text-[9px] text-on-surface-variant uppercase tracking-widest">CENTRAL 80% OBSERVED RANGE</div><div class="relative h-1.5 bg-outline/50 w-full"><div class="absolute h-full bg-primary left-[20%] w-[60%]"></div><div class="absolute h-3 w-0.5 bg-on-surface top-1/2 -translate-y-1/2 left-[50%]"></div></div><div class="flex justify-between text-[9px] font-data-mono text-on-surface-variant"><div class="flex gap-1"><span class="">P10</span><span class="text-on-surface">45.2m²</span></div><div class="flex gap-1"><span class="">Median</span><span class="text-on-surface">47.1m²</span></div><div class="flex gap-1"><span class="">P90</span><span class="text-on-surface">49.8m²</span></div></div><div class="text-[9px] text-on-surface-variant opacity-60">Full observed span: 42.1m²–52.4m²</div></div><div class="space-y-2"><div class="flex justify-between items-end"><span class="text-on-surface-variant text-[11px] uppercase tracking-wider">Luff</span><span class="text-on-surface font-data-mono text-body-md">MEDIAN <span class="font-bold">14.86m</span></span></div><div class="text-[9px] text-on-surface-variant uppercase tracking-widest">CENTRAL 80% OBSERVED RANGE</div><div class="relative h-1.5 bg-outline/50 w-full"><div class="absolute h-full bg-primary left-[15%] w-[70%]"></div><div class="absolute h-3 w-0.5 bg-on-surface top-1/2 -translate-y-1/2 left-[45%]"></div></div><div class="flex justify-between text-[9px] font-data-mono text-on-surface-variant"><div class="flex gap-1"><span class="">P10</span><span class="text-on-surface">14.20m</span></div><div class="flex gap-1"><span class="">Median</span><span class="text-on-surface">14.86m</span></div><div class="flex gap-1"><span class="">P90</span><span class="text-on-surface">15.45m</span></div></div><div class="text-[9px] text-on-surface-variant opacity-60">Full observed span: 13.80m–16.10m</div></div><div class="space-y-2"><div class="flex justify-between items-end"><span class="text-on-surface-variant text-[11px] uppercase tracking-wider">Leech</span><span class="text-on-surface font-data-mono text-body-md">MEDIAN <span class="font-bold">15.22m</span></span></div><div class="text-[9px] text-on-surface-variant uppercase tracking-widest">CENTRAL 80% OBSERVED RANGE</div><div class="relative h-1.5 bg-outline/50 w-full"><div class="absolute h-full bg-primary left-[30%] w-[40%]"></div><div class="absolute h-3 w-0.5 bg-on-surface top-1/2 -translate-y-1/2 left-[50%]"></div></div><div class="flex justify-between text-[9px] font-data-mono text-on-surface-variant"><div class="flex gap-1"><span class="">P10</span><span class="text-on-surface">14.80m</span></div><div class="flex gap-1"><span class="">Median</span><span class="text-on-surface">15.22m</span></div><div class="flex gap-1"><span class="">P90</span><span class="text-on-surface">15.90m</span></div></div><div class="text-[9px] text-on-surface-variant opacity-60">Full observed span: 14.10m–16.50m</div></div><div class="space-y-2"><div class="flex justify-between items-end"><span class="text-on-surface-variant text-[11px] uppercase tracking-wider">Foot</span><span class="text-on-surface font-data-mono text-body-md">MEDIAN <span class="font-bold">5.12m</span></span></div><div class="text-[9px] text-on-surface-variant uppercase tracking-widest">CENTRAL 80% OBSERVED RANGE</div><div class="relative h-1.5 bg-outline/50 w-full"><div class="absolute h-full bg-primary left-[25%] w-[50%]"></div><div class="absolute h-3 w-0.5 bg-on-surface top-1/2 -translate-y-1/2 left-[48%]"></div></div><div class="flex justify-between text-[9px] font-data-mono text-on-surface-variant"><div class="flex gap-1"><span class="">P10</span><span class="text-on-surface">4.95m</span></div><div class="flex gap-1"><span class="">Median</span><span class="text-on-surface">5.12m</span></div><div class="flex gap-1"><span class="">P90</span><span class="text-on-surface">5.35m</span></div></div><div class="text-[9px] text-on-surface-variant opacity-60">Full observed span: 4.70m–5.60m</div></div><div class="space-y-2"><div class="flex justify-between items-end"><span class="text-on-surface-variant text-[11px] uppercase tracking-wider">Mid Girth</span><span class="text-on-surface font-data-mono text-body-md">MEDIAN <span class="font-bold">3.24m</span></span></div><div class="text-[9px] text-on-surface-variant uppercase tracking-widest">CENTRAL 80% OBSERVED RANGE</div><div class="relative h-1.5 bg-outline/50 w-full"><div class="absolute h-full bg-primary left-[40%] w-[30%]"></div><div class="absolute h-3 w-0.5 bg-on-surface top-1/2 -translate-y-1/2 left-[55%]"></div></div><div class="flex justify-between text-[9px] font-data-mono text-on-surface-variant"><div class="flex gap-1"><span class="">P10</span><span class="text-on-surface">3.10m</span></div><div class="flex gap-1"><span class="">Median</span><span class="text-on-surface">3.24m</span></div><div class="flex gap-1"><span class="">P90</span><span class="text-on-surface">3.45m</span></div></div><div class="text-[9px] text-on-surface-variant opacity-60">Full observed span: 2.90m–3.80m</div></div></div><div class="flex justify-between items-center pt-4 border-t border-outline/30 font-data-mono text-[10px] text-on-surface-variant uppercase tracking-widest"><span class="">1,187 boats</span><span class="">1,434 accepted</span></div></div>
+<!-- Full Roach Main -->
+<div class="bg-surface border border-primary flex flex-col w-full sail-card p-4 sail-included" id="sail-FULL-ROACH"><div class="absolute top-0 right-0 bg-primary text-on-primary px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest">INCLUDED</div><div class="flex justify-between items-start mb-6"><div class="flex flex-col gap-2"><h4 class="font-headline text-headline-lg text-primary uppercase tracking-tight">FULL ROACH MAIN</h4><p class="text-on-surface-variant text-body-md">Powered performance mainsail</p></div><div class="w-24 h-32 relative"><svg viewBox="0 0 100 150" class="w-full h-full"><path d="M 50 10 Q 90 140 85 145 L 15 145 Q 10 140 50 10" fill="rgba(59, 130, 246, 0.1)" stroke="#3B82F6" stroke-width="1"></path></svg></div></div><div class="flex justify-between items-center mb-6"><span class="bg-primary/20 text-primary px-2 py-1 text-[10px] font-bold uppercase tracking-widest border border-primary/30">CONFIRMED</span><span class="font-data-mono text-[11px] text-on-surface-variant">n=22</span></div><div class="flex gap-2 mb-8"><div class="flex items-center gap-1 px-2 py-1 bg-surface-container-low border border-outline text-[10px] font-bold text-on-surface-variant"><span class="material-symbols-outlined text-[14px]">speed</span> PERFORMANCE CRUISE</div></div><div class="space-y-8 mb-8"><div class="space-y-2"><div class="flex justify-between items-end"><span class="text-on-surface-variant text-[11px] uppercase tracking-wider">Area</span><span class="text-on-surface font-data-mono text-body-md">MEDIAN <span class="font-bold">48.2m²</span></span></div><div class="text-[9px] text-on-surface-variant uppercase tracking-widest">CENTRAL 80% OBSERVED RANGE</div><div class="relative h-1.5 bg-outline/50 w-full"><div class="absolute h-full bg-primary left-[40%] w-[40%]"></div><div class="absolute h-3 w-0.5 bg-on-surface top-1/2 -translate-y-1/2 left-[60%]"></div></div></div><div class="space-y-2"><div class="flex justify-between items-end"><span class="text-on-surface-variant text-[11px] uppercase tracking-wider">Luff</span><span class="text-on-surface font-data-mono text-body-md">MEDIAN <span class="font-bold">14.49m</span></span></div><div class="text-[9px] text-on-surface-variant uppercase tracking-widest">CENTRAL 80% OBSERVED RANGE</div><div class="relative h-1.5 bg-outline/50 w-full"><div class="absolute h-full bg-primary left-[15%] w-[70%]"></div><div class="absolute h-3 w-0.5 bg-on-surface top-1/2 -translate-y-1/2 left-[45%]"></div></div></div><div class="space-y-2"><div class="flex justify-between items-end"><span class="text-on-surface-variant text-[11px] uppercase tracking-wider">Foot</span><span class="text-on-surface font-data-mono text-body-md">MEDIAN <span class="font-bold">5.40m</span></span></div><div class="text-[9px] text-on-surface-variant uppercase tracking-widest">CENTRAL 80% OBSERVED RANGE</div><div class="relative h-1.5 bg-outline/50 w-full"><div class="absolute h-full bg-primary left-[25%] w-[50%]"></div><div class="absolute h-3 w-0.5 bg-on-surface top-1/2 -translate-y-1/2 left-[48%]"></div></div></div></div></div>
+<!-- J2 -->
+<div class="bg-surface border border-primary flex flex-col w-full sail-card p-4 sail-included" id="sail-J2"><div class="absolute top-0 right-0 bg-primary text-on-primary px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest">INCLUDED</div><div class="flex justify-between items-start mb-6"><div class="flex flex-col gap-2"><h4 class="font-headline text-headline-lg text-primary uppercase tracking-tight">J2</h4><p class="text-on-surface-variant text-body-md">Primary medium-air headsail</p></div><div class="w-24 h-32 relative"><svg viewBox="0 0 100 150" class="w-full h-full"><path d="M 15 145 L 85 145 L 50 10 Z" fill="rgba(59, 130, 246, 0.1)" stroke="#3B82F6" stroke-width="1"></path></svg></div></div><div class="flex justify-between items-center mb-6"><span class="bg-primary/20 text-primary px-2 py-1 text-[10px] font-bold uppercase tracking-widest border border-primary/30">CONFIRMED</span><span class="font-data-mono text-[11px] text-on-surface-variant">n=473</span></div><div class="flex gap-2 mb-8"><div class="flex items-center gap-1 px-2 py-1 bg-surface-container-low border border-outline text-[10px] font-bold text-on-surface-variant"><span class="material-symbols-outlined text-[14px]">speed</span> PERFORMANCE CRUISE</div></div><div class="space-y-8 mb-8"><div class="space-y-2"><div class="flex justify-between items-end"><span class="text-on-surface-variant text-[11px] uppercase tracking-wider">Area</span><span class="text-on-surface font-data-mono text-body-md">MEDIAN <span class="font-bold">38.5m²</span></span></div><div class="text-[9px] text-on-surface-variant uppercase tracking-widest">CENTRAL 80% OBSERVED RANGE</div><div class="relative h-1.5 bg-outline/50 w-full"><div class="absolute h-full bg-primary left-[30%] w-[40%]"></div><div class="absolute h-3 w-0.5 bg-on-surface top-1/2 -translate-y-1/2 left-[50%]"></div></div></div><div class="space-y-2"><div class="flex justify-between items-end"><span class="text-on-surface-variant text-[11px] uppercase tracking-wider">Luff</span><span class="text-on-surface font-data-mono text-body-md">MEDIAN <span class="font-bold">15.20m</span></span></div><div class="text-[9px] text-on-surface-variant uppercase tracking-widest">CENTRAL 80% OBSERVED RANGE</div><div class="relative h-1.5 bg-outline/50 w-full"><div class="absolute h-full bg-primary left-[20%] w-[60%]"></div><div class="absolute h-3 w-0.5 bg-on-surface top-1/2 -translate-y-1/2 left-[50%]"></div></div></div><div class="space-y-2"><div class="flex justify-between items-end"><span class="text-on-surface-variant text-[11px] uppercase tracking-wider">Foot</span><span class="text-on-surface font-data-mono text-body-md">MEDIAN <span class="font-bold">4.80m</span></span></div><div class="text-[9px] text-on-surface-variant uppercase tracking-widest">CENTRAL 80% OBSERVED RANGE</div><div class="relative h-1.5 bg-outline/50 w-full"><div class="absolute h-full bg-primary left-[25%] w-[50%]"></div><div class="absolute h-3 w-0.5 bg-on-surface top-1/2 -translate-y-1/2 left-[48%]"></div></div></div></div></div>
+<!-- G1 -->
+</div>
+</section>
+<!-- Downwind Sails Section -->
+<section class="mb-xl space-y-6">
+<div class="flex justify-between items-end mb-lg border-b border-outline pb-sm">
+<div class="flex items-center gap-md">
+<h2 class="font-headline text-headline-md uppercase tracking-widest text-on-surface">Downwind Sails <span class="font-body text-on-surface-variant lowercase" style="font-size: 13px; font-family: Inter, monospace;">(8 configurations)</span></h2>
+</div>
+<div class="flex items-center gap-lg">
+<div class="flex gap-sm">
+
+
+</div>
+<button class="bg-primary text-on-primary px-4 py-2 text-[11px] font-bold uppercase tracking-wider flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">playlist_add</span> Keyword filtering
+                    </button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter pb-4"><div class="bg-surface border border-outline flex flex-col w-full sail-card p-4" id="sail-S3"><div class="flex justify-between items-start mb-6"><div class="flex flex-col gap-2"><h4 class="font-headline text-headline-lg text-primary uppercase tracking-tight">S3</h4><p class="text-on-surface-variant text-body-md">Heavy air reaching spinnaker</p></div><div class="w-24 h-32 relative"><img alt="Spinnaker" class="h-full w-full object-contain invert brightness-200" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCI4Kxlb2z15GY4Qg4e0Z_HEhMZCEQVuy74YAXDBfhZJSAfxafd2TLCks7k6DMYcaKKQagi7vxiFidyv8YxqkSXUiCnY8Mc_YwZFXvJhhBxiwpSSfVDN2QnkE2O32TzFplXE_LJ5uB7Ht6BPY6f-al2qiU7AbpUpbIgVRL9Cgqxk7dySIRXiVcNGQRh4JgFWjspRrUT4XO1M5E8dUYrvctjn4Q6XqsJIbYatGZSHya8-UIp3_-XX3Yrbl4ro5uxewWTIVQKXR137Q"></div></div><div class="flex justify-between items-center mb-6"><span class="bg-primary/20 text-primary px-2 py-1 text-[10px] font-bold uppercase tracking-widest border border-primary/30">CONFIRMED</span><span class="font-data-mono text-[11px] text-on-surface-variant">n=154</span></div><div class="flex gap-2 mb-8"><div class="flex items-center gap-1 px-2 py-1 bg-surface-container-low border border-outline text-[10px] font-bold text-on-surface-variant"><span class="material-symbols-outlined text-[14px]">trophy</span> RACE</div></div><div class="space-y-8 mb-8"><div class="space-y-2"><div class="flex justify-between items-end"><span class="text-on-surface-variant text-[11px] uppercase tracking-wider">Area</span><span class="text-on-surface font-data-mono text-body-md">MEDIAN <span class="font-bold">102.5m²</span></span></div><div class="text-[9px] text-on-surface-variant uppercase tracking-widest">CENTRAL 80% OBSERVED RANGE</div><div class="relative h-1.5 bg-outline/50 w-full"><div class="absolute h-full bg-primary left-[10%] w-[40%]"></div><div class="absolute h-3 w-0.5 bg-on-surface top-1/2 -translate-y-1/2 left-[30%]"></div></div></div><div class="grid grid-cols-2 gap-4"><div class="space-y-2"><div class="flex justify-between items-end"><span class="text-on-surface-variant text-[11px] uppercase tracking-wider">Luff</span><span class="text-on-surface font-data-mono text-body-md font-bold">15.40m</span></div></div><div class="space-y-2"><div class="flex justify-between items-end"><span class="text-on-surface-variant text-[11px] uppercase tracking-wider">Foot</span><span class="text-on-surface font-data-mono text-body-md font-bold">7.80m</span></div></div></div></div></div><div class="bg-surface border border-primary flex flex-col w-full sail-card p-4 sail-included" id="sail-S2"><div class="absolute top-0 right-0 bg-primary text-on-primary px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest">INCLUDED</div><div class="flex justify-between items-start mb-6"><div class="flex flex-col gap-2"><h4 class="font-headline text-headline-lg text-primary uppercase tracking-tight">S2</h4><p class="text-on-surface-variant text-body-md">Primary downwind runner</p></div><div class="w-24 h-32 relative"><img alt="Spinnaker" class="h-full w-full object-contain invert brightness-200" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCI4Kxlb2z15GY4Qg4e0Z_HEhMZCEQVuy74YAXDBfhZJSAfxafd2TLCks7k6DMYcaKKQagi7vxiFidyv8YxqkSXUiCnY8Mc_YwZFXvJhhBxiwpSSfVDN2QnkE2O32TzFplXE_LJ5uB7Ht6BPY6f-al2qiU7AbpUpbIgVRL9Cgqxk7dySIRXiVcNGQRh4JgFWjspRrUT4XO1M5E8dUYrvctjn4Q6XqsJIbYatGZSHya8-UIp3_-XX3Yrbl4ro5uxewWTIVQKXR137Q"></div></div><div class="flex justify-between items-center mb-6"><span class="bg-primary/20 text-primary px-2 py-1 text-[10px] font-bold uppercase tracking-widest border border-primary/30">CONFIRMED</span><span class="font-data-mono text-[11px] text-on-surface-variant">n=682</span></div><div class="flex gap-2 mb-8"><div class="flex items-center gap-1 px-2 py-1 bg-surface-container-low border border-outline text-[10px] font-bold text-on-surface-variant"><span class="material-symbols-outlined text-[14px]">speed</span> PERFORMANCE CRUISE</div></div><div class="space-y-8 mb-8"><div class="space-y-2"><div class="flex justify-between items-end"><span class="text-on-surface-variant text-[11px] uppercase tracking-wider">Area</span><span class="text-on-surface font-data-mono text-body-md">MEDIAN <span class="font-bold">107.4m²</span></span></div><div class="text-[9px] text-on-surface-variant uppercase tracking-widest">CENTRAL 80% OBSERVED RANGE</div><div class="relative h-1.5 bg-outline/50 w-full"><div class="absolute h-full bg-primary left-[40%] w-[50%]"></div><div class="absolute h-3 w-0.5 bg-on-surface top-1/2 -translate-y-1/2 left-[65%]"></div></div></div><div class="grid grid-cols-2 gap-4"><div class="space-y-2"><div class="flex justify-between items-end"><span class="text-on-surface-variant text-[11px] uppercase tracking-wider">Luff</span><span class="text-on-surface font-data-mono text-body-md font-bold">15.67m</span></div></div><div class="space-y-2"><div class="flex justify-between items-end"><span class="text-on-surface-variant text-[11px] uppercase tracking-wider">Foot</span><span class="text-on-surface font-data-mono text-body-md font-bold">8.05m</span></div></div></div></div></div><div class="bg-surface border border-outline flex flex-col w-full sail-card p-4" id="sail-S15"><div class="flex justify-between items-start mb-6"><div class="flex flex-col gap-2"><h4 class="font-headline text-headline-lg text-primary uppercase tracking-tight">S1.5</h4><p class="text-on-surface-variant text-body-md">Light-to-medium downwind sail</p></div><div class="w-24 h-32 relative"><img alt="Spinnaker" class="h-full w-full object-contain invert brightness-200" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCI4Kxlb2z15GY4Qg4e0Z_HEhMZCEQVuy74YAXDBfhZJSAfxafd2TLCks7k6DMYcaKKQagi7vxiFidyv8YxqkSXUiCnY8Mc_YwZFXvJhhBxiwpSSfVDN2QnkE2O32TzFplXE_LJ5uB7Ht6BPY6f-al2qiU7AbpUpbIgVRL9Cgqxk7dySIRXiVcNGQRh4JgFWjspRrUT4XO1M5E8dUYrvctjn4Q6XqsJIbYatGZSHya8-UIp3_-XX3Yrbl4ro5uxewWTIVQKXR137Q"></div></div><div class="flex justify-between items-center mb-6"><span class="bg-primary/20 text-primary px-2 py-1 text-[10px] font-bold uppercase tracking-widest border border-primary/30">CONFIRMED</span><span class="font-data-mono text-[11px] text-on-surface-variant">n=260</span></div><div class="flex gap-2 mb-8"><div class="flex items-center gap-1 px-2 py-1 bg-surface-container-low border border-outline text-[10px] font-bold text-on-surface-variant"><span class="material-symbols-outlined text-[14px]">speed</span> PERFORMANCE CRUISE</div></div><div class="space-y-8 mb-8"><div class="space-y-2"><div class="flex justify-between items-end"><span class="text-on-surface-variant text-[11px] uppercase tracking-wider">Area</span><span class="text-on-surface font-data-mono text-body-md">MEDIAN <span class="font-bold">110.2m²</span></span></div><div class="text-[9px] text-on-surface-variant uppercase tracking-widest">CENTRAL 80% OBSERVED RANGE</div><div class="relative h-1.5 bg-outline/50 w-full"><div class="absolute h-full bg-primary left-[50%] w-[40%]"></div><div class="absolute h-3 w-0.5 bg-on-surface top-1/2 -translate-y-1/2 left-[70%]"></div></div></div><div class="grid grid-cols-2 gap-4"><div class="space-y-2"><div class="flex justify-between items-end"><span class="text-on-surface-variant text-[11px] uppercase tracking-wider">Luff</span><span class="text-on-surface font-data-mono text-body-md font-bold">15.80m</span></div></div><div class="space-y-2"><div class="flex justify-between items-end"><span class="text-on-surface-variant text-[11px] uppercase tracking-wider">Foot</span><span class="text-on-surface font-data-mono text-body-md font-bold">8.20m</span></div></div></div></div></div></div>
+</section>
+</div>
+<!-- Complete Upwind and Downwind Data Profiles -->
+<section class="mb-xl" id="complete-sail-profiles">
+<div class="border border-outline bg-surface p-lg mb-xl">
+<div class="flex flex-col lg:flex-row lg:items-end justify-between gap-lg"><div class="flex-1"><label class="font-label-caps text-[10px] text-primary uppercase tracking-widest" for="sail-profile-search">Search upwind and downwind sails</label><div class="relative mt-sm"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[19px]">search</span><input class="w-full bg-background border border-outline pl-11 pr-28 py-3 text-body-md text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:ring-0" id="sail-profile-search" type="search" placeholder="Search by sail name, category, use or tag..."><button class="absolute right-2 top-1/2 -translate-y-1/2 border border-outline px-3 py-2 text-[10px] font-bold uppercase tracking-widest hover:border-primary" id="clear-sail-search" type="button">Clear</button></div><p class="text-[10px] text-on-surface-variant mt-2">One search filters both Upwind Sails and Downwind Sails.</p></div><div class="font-data-mono text-body-sm text-on-surface-variant" id="sail-search-results">12 of 12 profiles</div></div>
+</div>
+<div class="mb-xl">
+<div class="flex items-end justify-between border-b border-outline pb-sm mb-lg"><div><span class="font-label-caps text-[10px] text-primary uppercase tracking-widest">Aerodynamic group</span><h2 class="font-headline text-headline-md uppercase tracking-widest mt-1">Upwind Sails</h2></div><span class="font-data-mono text-body-sm text-on-surface-variant" id="upwind-visible-count">8 of 8 profiles</span></div>
+<div class="space-y-xl" id="complete-upwind-groups"></div>
+</div>
+<div>
+<div class="flex items-end justify-between border-b border-outline pb-sm mb-lg"><div><span class="font-label-caps text-[10px] text-primary uppercase tracking-widest">Aerodynamic group</span><h2 class="font-headline text-headline-md uppercase tracking-widest mt-1">Downwind Sails</h2></div><span class="font-data-mono text-body-sm text-on-surface-variant" id="downwind-visible-count">4 of 4 profiles</span></div>
+<div class="space-y-xl" id="complete-downwind-groups"></div>
+</div>
+<div class="mt-xl border border-outline bg-background/40 px-md py-3 flex gap-md items-start"><span class="material-symbols-outlined text-primary text-[18px]">info</span><p class="text-body-sm text-on-surface-variant">These are population statistics for class comparison. They describe observed sail records and are not an individual boat specification.</p></div>
+</section>
+<!-- Collapsible: Sail Tags Inventory -->
+<section class="mb-xl">
+<div class="flex items-center gap-md mb-lg border-b border-outline pb-sm">
+<h2 class="font-headline text-headline-md uppercase tracking-widest text-on-surface">TECHNICAL REFERENCE: SAIL TAGS INVENTORY</h2>
+</div>
+<p class="text-body-sm text-on-surface-variant mb-lg">Classification tags applied to the FIRST 40.7 population database for filtering and recommendation logic.</p>
+<div class="bg-surface border border-outline">
+<div class="grid grid-cols-[160px_1fr] border-b border-outline bg-surface-container-low">
+<div class="px-lg py-3 font-label-caps text-[11px] font-bold text-on-surface-variant uppercase tracking-widest border-r border-outline">Sail Category</div>
+<div class="px-lg py-3 font-label-caps text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Available Performance Tags</div>
+</div>
+<div class="divide-y divide-outline">
+<div class="grid grid-cols-[160px_1fr]">
+<div class="px-lg py-6 font-headline font-bold text-on-surface border-r border-outline flex items-center">Main</div>
+<div class="px-lg py-6 flex flex-wrap gap-2">
+<span class="px-3 py-1 border border-outline text-on-surface-variant text-[11px] font-label-caps uppercase tracking-wider bg-background/50">Cruise</span>
+<span class="px-3 py-1 border border-outline text-on-surface-variant text-[11px] font-label-caps uppercase tracking-wider bg-background/50">Performance Cruise</span>
+<span class="px-3 py-1 border border-outline text-on-surface-variant text-[11px] font-label-caps uppercase tracking-wider bg-background/50">Club Racing</span>
+<span class="px-3 py-1 border border-outline text-on-surface-variant text-[11px] font-label-caps uppercase tracking-wider bg-background/50">Offshore</span>
+<span class="px-3 py-1 border border-outline text-on-surface-variant text-[11px] font-label-caps uppercase tracking-wider bg-background/50">Core</span>
+<span class="px-3 py-1 border border-outline text-on-surface-variant text-[11px] font-label-caps uppercase tracking-wider bg-background/50">Size Recommended</span>
+</div>
+</div>
+<div class="grid grid-cols-[160px_1fr]">
+<div class="px-lg py-6 font-headline font-bold text-on-surface border-r border-outline flex items-center leading-tight">Headsail</div>
+<div class="px-lg py-6 flex flex-wrap gap-2">
+<span class="px-3 py-1 border border-outline text-on-surface-variant text-[11px] font-label-caps uppercase tracking-wider bg-background/50">Upwind</span>
+<span class="px-3 py-1 border border-outline text-on-surface-variant text-[11px] font-label-caps uppercase tracking-wider bg-background/50">Light Wind</span>
+<span class="px-3 py-1 border border-outline text-on-surface-variant text-[11px] font-label-caps uppercase tracking-wider bg-background/50">Performance Cruise</span>
+<span class="px-3 py-1 border border-outline text-on-surface-variant text-[11px] font-label-caps uppercase tracking-wider bg-background/50">Club Racing</span>
+<span class="px-3 py-1 border border-outline text-on-surface-variant text-[11px] font-label-caps uppercase tracking-wider bg-background/50">Full Racing</span>
+<span class="px-3 py-1 border border-outline text-on-surface-variant text-[11px] font-label-caps uppercase tracking-wider bg-background/50">Offshore</span>
+<span class="px-3 py-1 border border-outline text-on-surface-variant text-[11px] font-label-caps uppercase tracking-wider bg-background/50">Professional</span>
+<span class="px-3 py-1 border border-outline text-on-surface-variant text-[11px] font-label-caps uppercase tracking-wider bg-background/50">Size Recommended</span>
+</div>
+</div>
+<div class="grid grid-cols-[160px_1fr]">
+<div class="px-lg py-6 font-headline font-bold text-on-surface border-r border-outline flex items-center">Spinnaker</div>
+<div class="px-lg py-6 flex flex-wrap gap-2">
+<span class="px-3 py-1 border border-outline text-on-surface-variant text-[11px] font-label-caps uppercase tracking-wider bg-background/50">Downwind</span>
+<span class="px-3 py-1 border border-outline text-on-surface-variant text-[11px] font-label-caps uppercase tracking-wider bg-background/50">Cruise</span>
+<span class="px-3 py-1 border border-outline text-on-surface-variant text-[11px] font-label-caps uppercase tracking-wider bg-background/50">Performance Cruise</span>
+<span class="px-3 py-1 border border-outline text-on-surface-variant text-[11px] font-label-caps uppercase tracking-wider bg-background/50">Club Racing</span>
+<span class="px-3 py-1 border border-outline text-on-surface-variant text-[11px] font-label-caps uppercase tracking-wider bg-background/50">Offshore</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Collapsible: Class Sail Analytics -->
+<section class="mb-xl">
+<div class="flex items-center gap-md mb-lg border-b border-outline pb-sm">
+<h2 class="font-headline text-headline-md uppercase tracking-widest text-on-surface">FULL CLASS DATA: CLASS SAIL ANALYTICS</h2>
+</div>
+<p class="font-body text-on-surface-variant mb-xl text-body-sm">Detailed statistical breakdown of configurations across 1,187 verified FIRST 40.7 hulls.</p>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<div class="bg-surface border border-outline p-md space-y-md">
+<h3 class="font-label-caps text-[11px] text-on-surface-variant tracking-widest uppercase">Mainsail Selection</h3>
+<div class="space-y-2">
+<div class="relative h-10 flex items-center px-3 border border-outline/30 overflow-hidden">
+<div class="absolute inset-0 bg-primary/20 w-[98.5%]"></div>
+<div class="relative flex justify-between w-full text-body-sm font-medium">
+<span class="text-on-surface">Standard Main</span>
+<div class="flex gap-4"><span class="text-primary font-data-mono">1,434</span><span class="text-on-surface-variant opacity-60">98.5%</span></div>
+</div>
+</div>
+<div class="relative h-10 flex items-center px-3 border border-outline/30 overflow-hidden">
+<div class="absolute inset-0 bg-primary/20 w-[1.5%]"></div>
+<div class="relative flex justify-between w-full text-body-sm font-medium">
+<span class="text-on-surface">Full Roach</span>
+<div class="flex gap-4"><span class="text-primary font-data-mono">22</span><span class="text-on-surface-variant opacity-60">1.5%</span></div>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-surface border border-outline p-md space-y-md">
+<h3 class="font-label-caps text-[11px] text-on-surface-variant tracking-widest uppercase">Headsail Preference</h3>
+<div class="space-y-2">
+<div class="relative h-10 flex items-center px-3 border border-outline/30 overflow-hidden">
+<div class="absolute inset-0 bg-primary/20 w-[32.5%]"></div>
+<div class="relative flex justify-between w-full text-body-sm font-medium">
+<span class="text-on-surface">J2</span>
+<div class="flex gap-4"><span class="text-primary font-data-mono">473</span><span class="text-on-surface-variant opacity-60">32.5%</span></div>
+</div>
+</div>
+<div class="relative h-10 flex items-center px-3 border border-outline/30 overflow-hidden">
+<div class="absolute inset-0 bg-primary/20 w-[30.6%]"></div>
+<div class="relative flex justify-between w-full text-body-sm font-medium">
+<span class="text-on-surface">G1</span>
+<div class="flex gap-4"><span class="text-primary font-data-mono">446</span><span class="text-on-surface-variant opacity-60">30.6%</span></div>
+</div>
+</div>
+<div class="relative h-10 flex items-center px-3 border border-outline/30 overflow-hidden">
+<div class="absolute inset-0 bg-primary/20 w-[15.2%]"></div>
+<div class="relative flex justify-between w-full text-body-sm font-medium">
+<span class="text-on-surface">J1</span>
+<div class="flex gap-4"><span class="text-primary font-data-mono">222</span><span class="text-on-surface-variant opacity-60">15.2%</span></div>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-surface border border-outline p-md space-y-md">
+<h3 class="font-label-caps text-[11px] text-on-surface-variant tracking-widest uppercase">Spinnaker Choice</h3>
+<div class="space-y-2">
+<div class="relative h-10 flex items-center px-3 border border-outline/30 overflow-hidden">
+<div class="absolute inset-0 bg-primary/20 w-[48.9%]"></div>
+<div class="relative flex justify-between w-full text-body-sm font-medium">
+<span class="text-on-surface">S2</span>
+<div class="flex gap-4"><span class="text-primary font-data-mono">682</span><span class="text-on-surface-variant opacity-60">48.9%</span></div>
+</div>
+</div>
+<div class="relative h-10 flex items-center px-3 border border-outline/30 overflow-hidden">
+<div class="absolute inset-0 bg-primary/20 w-[18.6%]"></div>
+<div class="relative flex justify-between w-full text-body-sm font-medium">
+<span class="text-on-surface">S1.5</span>
+<div class="flex gap-4"><span class="text-primary font-data-mono">260</span><span class="text-on-surface-variant opacity-60">18.6%</span></div>
+</div>
+</div>
+<div class="relative h-10 flex items-center px-3 border border-outline/30 overflow-hidden">
+<div class="absolute inset-0 bg-primary/20 w-[14.4%]"></div>
+<div class="relative flex justify-between w-full text-body-sm font-medium">
+<span class="text-on-surface">S1</span>
+<div class="flex gap-4"><span class="text-primary font-data-mono">201</span><span class="text-on-surface-variant opacity-60">14.4%</span></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<footer class="bg-surface border-t border-outline py-xl px-margin-desktop w-full max-w-[1440px] mx-auto">
+<div class="flex justify-between items-center opacity-40">
+<span class="font-headline font-bold text-label-caps">SURGEX BOAT DATA SYSTEM</span>
+<span class="text-[10px]">© 2026</span>
+</div>
+</footer>
+
+
+
+
+
+
+
+
+<script>
+const completeSailData = {
+  'STANDARD-MAIN': sail('Standard Main', 'All-round mainsail', 'main', 'ESTIMATED', 1764, 1048, 1389, ['CRUISING','PERFORMANCE CRUISE','RACE'], [m('Area',20.6,20.9,21.0,'m²'),m('Luff',9.1,9.14,9.1,'m'),m('Foot',3.8,3.81,3.8,'m'),m('Mid Girth',2.4,2.48,2.5,'m')]),
+  'FULL-ROACH': sail('Full Roach Main', 'Specialty mainsail', 'main', 'PROVISIONAL', 3, 1, 2, ['PERFORMANCE CRUISE'], [m('Area',23.2,23.2,23.2,'m²'),m('Luff',9.1,9.14,9.1,'m'),m('Foot',3.8,3.80,3.8,'m'),m('Mid Girth',2.7,2.72,2.7,'m')]),
+  'J1': sail('J1', 'Light-air upwind', 'headsail', 'CONFIRMED', 1093, 792, 969, ['PERFORMANCE CRUISE','RACE'], [m('Area',13.4,13.9,14.0,'m²'),m('Luff',9.2,9.30,9.3,'m'),m('LP',2.9,2.95,3.0,'m'),m('Mid Girth',1.4,1.48,1.5,'m')]),
+  'J2': sail('J2', 'All-round upwind', 'headsail', 'CONFIRMED', 54, 38, 38, ['CRUISING','PERFORMANCE CRUISE','RACE'], [m('Area',12.4,12.7,12.8,'m²'),m('Luff',8.8,9.15,9.2,'m'),m('LP',2.8,2.90,2.9,'m'),m('Mid Girth',1.3,1.34,1.4,'m')]),
+  'J4': sail('J4', 'Heavy-air upwind', 'headsail', 'ESTIMATED', 33, 33, 33, ['PERFORMANCE CRUISE','RACE'], [m('Area',7.1,7.1,12.7,'m²'),m('Luff',6.5,6.50,9.2,'m'),m('LP',2.3,2.27,2.5,'m'),m('Mid Girth',1.0,1.02,1.3,'m')]),
+  'J3': sail('J3', 'Heavy-air upwind', 'headsail', 'PROVISIONAL', 32, 26, 29, ['PERFORMANCE CRUISE','RACE'], [m('Area',15.1,15.2,15.2,'m²'),m('Luff',9.6,9.60,9.8,'m'),m('LP',2.9,3.00,3.1,'m'),m('Mid Girth',1.5,1.56,1.6,'m')]),
+  'G1': sail('G1', 'Light-air upwind', 'headsail', 'CONFIRMED', 487, 230, 321, ['PERFORMANCE CRUISE','RACE'], [m('Area',14.0,14.0,14.0,'m²'),m('Luff',9.3,9.54,9.6,'m'),m('LP',2.8,2.91,3.0,'m'),m('Mid Girth',1.5,1.48,1.5,'m')]),
+  'CODE-0': sail('Code 0', 'Light-air reaching', 'code', 'CONFIRMED', 19, 19, 19, ['PERFORMANCE CRUISE','RACE'], [m('Area',30.2,35.4,63.0,'m²'),m('Luff',10.2,10.88,12.0,'m'),m('Leech',9.2,9.78,9.8,'m'),m('Foot',6.5,6.62,7.0,'m'),m('LP',5.0,5.44,6.4,'m'),m('Mid Girth',3.1,3.62,7.0,'m')]),
+  'A1': sail('A1', 'Reaching downwind', 'asymmetric', 'CONFIRMED', 848, 605, 706, ['PERFORMANCE CRUISE','RACE'], [m('Area',63.3,65.0,65.0,'m²'),m('Luff',12.0,12.20,12.2,'m'),m('Leech',9.6,9.79,9.9,'m'),m('Foot',7.1,7.37,7.4,'m'),m('Mid Girth',6.9,6.98,7.1,'m')]),
+  'A2': sail('A2', 'Primary downwind', 'asymmetric', 'CONFIRMED', 810, 430, 550, ['CRUISING','PERFORMANCE CRUISE','RACE'], [m('Area',62.3,64.5,65.4,'m²'),m('Luff',10.7,11.05,12.1,'m'),m('Leech',8.8,9.72,11.3,'m'),m('Foot',6.4,6.84,7.4,'m'),m('Mid Girth',6.1,7.00,7.3,'m')]),
+  'A3': sail('A3', 'Reaching downwind', 'asymmetric', 'PROVISIONAL', 13, 13, 13, ['PERFORMANCE CRUISE','RACE'], [m('Area',52.0,55.9,57.7,'m²'),m('Luff',11.3,11.70,11.8,'m'),m('Leech',9.1,9.62,9.9,'m'),m('Foot',6.6,6.92,7.0,'m'),m('Mid Girth',5.8,6.10,6.6,'m')]),
+  'S2': sail('S2', 'Primary downwind', 'symmetric', 'PROVISIONAL', 2, 2, 2, ['CRUISING','PERFORMANCE CRUISE','RACE'], [m('Area',47.5,47.5,47.5,'m²'),m('Foot',5.2,5.19,5.2,'m'),m('Mid Girth',5.8,5.83,5.8,'m')])
+};
+
+const completeGroups = {
+  upwind: [
+    {title:'MAIN', ids:['STANDARD-MAIN','FULL-ROACH']},
+    {title:'HEADSAIL · J-SERIES', ids:['J1','J2','J4','J3']},
+    {title:'HEADSAIL', ids:['G1','CODE-0']}
+  ],
+  downwind: [
+    {title:'ASYMMETRIC SPINNAKER', ids:['A1','A2','A3']},
+    {title:'SPINNAKER', ids:['S2']}
+  ]
+};
+
+const usageProfiles = {
+  CHARTER: {name:'Cruising Essential', ids:['STANDARD-MAIN','G1']},
+  CRUISING: {name:'Performance Cruise', ids:['FULL-ROACH','J2','S2']},
+  RACING: {name:'Race Optimized', ids:['FULL-ROACH','J1','J2','A1','A2']}
+};
+
+const profileFindings = {
+  'FULL-ROACH': {label:'Mainsail finding',percentage:'98.5%',title:'Standard Main is the baseline',copy:'1,434 sisterships use a standard-roach layout, durability-first choice for cruising.'},
+  'J2': {label:'Headsail finding',percentage:'32.5%',title:'J2 gives broad range',copy:'J2 is the most recorded headsail for medium-air performance.'},
+  'S2': {label:'Spinnaker finding',percentage:'48.9%',title:'S2 is the dominant choice',copy:'682 records select S2, a practical all-purpose shape.'}
+};
+
+function m(label,p10,median,p90,unit){ return {label,p10,median,p90,unit}; }
+function emptyM(label,unit){ return {label,p10:null,median:null,p90:null,unit:unit||'m'}; }
+function sail(name,role,kind,status,n,boats,accepted,tags,metrics){ return {name,role,kind,status,n,boats,accepted,tags,metrics}; }
+function fmt(value){ if(value===null||value===undefined)return '—'; return Number(value).toFixed(2).replace(/0$/,'').replace(/\.0$/,''); }
+
+function outline(kind){
+  if(kind==='main') return '<svg viewBox="0 0 100 150" class="w-24 h-32"><path d="M50 10Q87 120 84 145L18 145Q13 137 50 10" fill="rgba(59,130,246,.10)" stroke="#3B82F6"/><path d="M29 112L81 112M38 82L75 82M47 52L68 52" stroke="#3B82F6" stroke-opacity=".35"/></svg>';
+  if(kind==='headsail') return '<svg viewBox="0 0 100 150" class="w-24 h-32"><path d="M27 145L72 12Q82 73 84 145H27" fill="rgba(59,130,246,.10)" stroke="#3B82F6"/><path d="M36 113L82 113M45 82L79 82M55 50L75 50" stroke="#3B82F6" stroke-opacity=".35"/></svg>';
+  if(kind==='symmetric') return '<svg viewBox="0 0 100 150" class="w-24 h-32"><path d="M50 12C22 34 20 104 28 142C41 148 59 148 72 142C80 104 78 34 50 12Z" fill="rgba(59,130,246,.10)" stroke="#3B82F6"/></svg>';
+  return '<svg viewBox="0 0 100 150" class="w-24 h-32"><path d="M50 10C28 30 21 101 27 142C44 148 67 148 83 141C84 88 73 32 50 10Z" fill="rgba(59,130,246,.10)" stroke="#3B82F6"/><path d="M29 112Q53 122 81 111M27 82Q53 92 80 81M33 51Q53 59 72 51" stroke="#3B82F6" stroke-opacity=".35"/></svg>';
+}
+
+function metricRow(metric){
+  if(metric.median===null){
+    return '<div class="space-y-2"><div class="flex justify-between items-end gap-md"><span class="text-on-surface-variant text-[11px]">'+metric.label+'</span><span class="font-data-mono text-body-md font-bold">—</span></div><div class="profile-track"></div><div class="flex justify-between text-[9px] font-data-mono text-on-surface-variant"><span>P10 —</span><span>data unavailable</span><span>P90 —</span></div></div>';
+  }
+  const spread=Math.abs(metric.p90-metric.p10);
+  const base=Math.max(Math.abs(metric.median),.01);
+  const width=Math.max(2,Math.min(92,20+(spread/base)*140));
+  const medianShare=metric.p90===metric.p10?50:Math.max(5,Math.min(95,((metric.median-metric.p10)/(metric.p90-metric.p10))*100));
+  const left=(100-width)/2;
+  const marker=left+(width*medianShare/100);
+  return '<div class="space-y-2"><div class="flex justify-between items-end gap-md"><span class="text-on-surface-variant text-[11px]">'+metric.label+'</span><span class="font-data-mono text-body-md font-bold">'+fmt(metric.median)+metric.unit+'</span></div><div class="profile-track"><span class="profile-range" style="left:'+left+'%;width:'+width+'%"></span><span class="profile-median" style="left:'+marker+'%"></span></div><div class="flex justify-between text-[9px] font-data-mono text-on-surface-variant"><span>P10 '+fmt(metric.p10)+'</span><span>median</span><span>P90 '+fmt(metric.p90)+'</span></div></div>';
+}
+
+function dataCard(item,id,categoryTitle,flow){
+  const statusClass=item.status==='CONFIRMED'?'border-primary/50 text-primary':'border-outline text-on-surface-variant';
+  const metricMap={}; item.metrics.forEach(metric=>metricMap[metric.label]=metric);
+  const primary=['Area','Luff','Leech'].map(label=>metricMap[label]||emptyM(label,label==='Area'?'m²':'m'));
+  const extras=item.metrics.filter(metric=>!['Area','Luff','Leech'].includes(metric.label));
+  const searchText=[item.name,item.role,item.status,categoryTitle,flow].concat(item.tags).join(' ').toLowerCase();
+  return '<article class="profile-card bg-surface border border-outline flex flex-col transition-colors scroll-mt-24" id="profile-detail-'+id+'" data-sail-id="'+id+'" data-flow="'+flow+'" data-search="'+searchText+'"><div class="px-md py-lg min-h-44 flex items-center justify-between gap-md bg-background/35"><div><h4 class="font-headline text-headline-lg text-primary">'+item.name+'</h4><p class="text-body-md mt-2">'+item.role+'</p></div>'+outline(item.kind)+'</div><div class="p-md border-t border-outline flex flex-col flex-1"><div class="flex justify-between items-center mb-md"><span class="border '+statusClass+' px-2 py-1 text-[10px] font-bold uppercase tracking-widest">'+item.status+'</span><span class="font-data-mono text-[10px] text-on-surface-variant">'+item.n+'</span></div><div class="flex flex-wrap gap-sm mb-lg">'+item.tags.map(t=>'<span class="border border-outline px-2 py-1 text-[9px] font-bold uppercase tracking-widest text-on-surface-variant">'+t+'</span>').join('')+'</div><div class="space-y-lg primary-dimensions">'+primary.map(metricRow).join('')+'</div><div class="extra-dimensions hidden space-y-lg mt-lg">'+extras.map(metricRow).join('')+'</div><button class="card-dimensions-toggle mt-lg border border-outline hover:border-primary px-3 py-2 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2" type="button"><span class="material-symbols-outlined text-[16px]">expand_more</span><span>Show all dimensions</span></button><div class="mt-lg pt-md border-t border-outline/70 flex justify-between text-[10px] font-data-mono text-on-surface-variant"><span>'+item.boats+' boats</span><span>'+item.accepted+' accepted</span></div></div></article>';
+}
+
+function renderCategory(group,flow){
+  return '<section class="sail-category" data-flow="'+flow+'"><div class="flex flex-col md:flex-row md:items-center justify-between gap-md border-b border-outline/70 pb-sm mb-md"><div class="flex items-center gap-md"><h3 class="font-label-caps text-[11px] uppercase tracking-widest">'+group.title+'</h3><span class="category-visible-count font-data-mono text-[10px] text-on-surface-variant" data-total="'+group.ids.length+'">'+group.ids.length+' of '+group.ids.length+' '+(group.ids.length===1?'configuration':'configurations')+'</span></div><button class="category-expand-toggle border border-outline hover:border-primary px-3 py-2 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2" type="button"><span class="material-symbols-outlined text-[16px]">unfold_more</span><span>Expand all</span></button></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter items-start">'+group.ids.map(id=>dataCard(completeSailData[id],id,group.title,flow)).join('')+'</div></section>';
+}
+
+function summaryCard(id){
+  const item=completeSailData[id];
+  const primary=item.metrics.slice(0,3);
+  const finding=profileFindings[id];
+  const findingBlock=finding?'<div class="mt-md pt-md border-t border-primary/30 bg-primary/5 -mx-md -mb-md px-md py-md"><div class="flex items-start justify-between gap-md"><span class="text-[9px] text-on-surface-variant uppercase tracking-widest font-bold">'+finding.label+'</span><span class="font-data-mono text-primary text-body-lg font-bold">'+finding.percentage+'</span></div><div class="font-headline text-body-md font-bold mt-2">'+finding.title+'</div><p class="text-[11px] leading-relaxed text-on-surface-variant mt-1">'+finding.copy+'</p></div>':'';
+  return '<article class="bg-surface border border-outline p-md flex flex-col"><div class="h-28 flex items-center justify-center mb-md">'+outline(item.kind)+'</div><span class="text-[9px] text-primary uppercase tracking-widest font-bold">Typical profile</span><h4 class="font-headline text-body-lg font-bold mt-1">'+item.name+'</h4><p class="text-body-sm text-on-surface-variant mt-1 mb-md">'+item.role+'</p><div class="grid grid-cols-3 gap-sm">'+primary.map(x=>'<div class="border border-outline/60 p-sm"><div class="text-[9px] text-on-surface-variant">'+x.label+'</div><div class="font-data-mono text-[11px] font-bold mt-1">'+fmt(x.median)+x.unit+'</div></div>').join('')+'</div><button class="summary-detail-button mt-md border border-primary text-primary hover:bg-primary hover:text-on-primary px-3 py-2 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2" data-sail-id="'+id+'" type="button"><span>View detailed data</span><span class="material-symbols-outlined text-[16px]">arrow_downward</span></button>'+findingBlock+'</article>';
+}
+
+function setDataUsageProfile(profileId){
+  const active=usageProfiles[profileId];
+  document.querySelectorAll('[id^="pkg-"]').forEach(card=>{card.classList.remove('selected-package','border-primary');card.classList.add('border-outline');});
+  document.getElementById('pkg-'+profileId).classList.add('selected-package','border-primary');
+  document.querySelectorAll('[id^="btn-"]').forEach(button=>{button.className='w-full border border-primary text-primary hover:bg-primary hover:text-on-primary transition-all py-3 text-[11px] font-bold uppercase tracking-widest';button.textContent='View this profile';});
+  const button=document.getElementById('btn-'+profileId);button.className='w-full bg-primary text-on-primary transition-all py-3 text-[11px] font-bold uppercase tracking-widest';button.textContent='Active profile';
+  document.getElementById('rec-name').textContent=active.name;
+  document.getElementById('rec-details').textContent=active.ids.map(id=>completeSailData[id].name).join(', ')+' are the typical profiles associated with this usage group.';
+  document.getElementById('rec-count').textContent=active.ids.length;
+  const grid=document.getElementById('active-profile-sails-grid');
+  grid.className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter mb-md';
+  grid.innerHTML=active.ids.map(summaryCard).join('');
+  document.querySelectorAll('.profile-card').forEach(card=>{
+    const matched=active.ids.includes(card.dataset.sailId);
+    card.classList.toggle('border-primary',matched);
+    card.classList.toggle('border-2',matched);
+    card.classList.toggle('ring-1',matched);
+    card.classList.toggle('ring-primary',matched);
+    card.classList.toggle('border-outline',!matched);
+    card.setAttribute('aria-current',matched?'true':'false');
+  });
+}
+
+function filterSailProfiles(value){
+  const terms=value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const cards=Array.from(document.querySelectorAll('.profile-card'));
+  cards.forEach(card=>{
+    const match=terms.every(term=>card.dataset.search.includes(term));
+    card.classList.toggle('hidden',!match);
+  });
+  document.querySelectorAll('.sail-category').forEach(category=>{
+    const categoryCards=Array.from(category.querySelectorAll('.profile-card'));
+    const visible=categoryCards.filter(card=>!card.classList.contains('hidden')).length;
+    category.classList.toggle('hidden',visible===0);
+    const total=categoryCards.length;
+    category.querySelector('.category-visible-count').textContent=visible+' of '+total+' '+(total===1?'configuration':'configurations');
+  });
+  const upwindVisible=cards.filter(card=>card.dataset.flow==='upwind'&&!card.classList.contains('hidden')).length;
+  const downwindVisible=cards.filter(card=>card.dataset.flow==='downwind'&&!card.classList.contains('hidden')).length;
+  document.getElementById('upwind-visible-count').textContent=upwindVisible+' of 8 profiles';
+  document.getElementById('downwind-visible-count').textContent=downwindVisible+' of 4 profiles';
+  document.getElementById('sail-search-results').textContent=(upwindVisible+downwindVisible)+' of 12 profiles';
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+  document.getElementById('complete-upwind-groups').innerHTML=completeGroups.upwind.map(group=>renderCategory(group,'upwind')).join('');
+  document.getElementById('complete-downwind-groups').innerHTML=completeGroups.downwind.map(group=>renderCategory(group,'downwind')).join('');
+  ['CHARTER','CRUISING','RACING'].forEach(id=>document.getElementById('btn-'+id).addEventListener('click',()=>setDataUsageProfile(id)));
+  const searchInput=document.getElementById('sail-profile-search');
+  searchInput.addEventListener('input',()=>filterSailProfiles(searchInput.value));
+  document.getElementById('clear-sail-search').addEventListener('click',()=>{searchInput.value='';filterSailProfiles('');searchInput.focus();});
+  document.getElementById('active-profile-sails-grid').addEventListener('click',event=>{
+    const button=event.target.closest('.summary-detail-button');
+    if(!button)return;
+    searchInput.value='';
+    filterSailProfiles('');
+    const target=document.getElementById('profile-detail-'+button.dataset.sailId);
+    if(target){
+      target.scrollIntoView({behavior:'smooth',block:'start'});
+      target.classList.add('bg-primary/5');
+      window.setTimeout(()=>target.classList.remove('bg-primary/5'),1200);
+    }
+  });
+  document.getElementById('complete-sail-profiles').addEventListener('click',event=>{
+    const cardButton=event.target.closest('.card-dimensions-toggle');
+    if(cardButton){
+      const card=cardButton.closest('.profile-card');
+      const extra=card.querySelector('.extra-dimensions');
+      const opening=extra.classList.contains('hidden');
+      extra.classList.toggle('hidden',!opening);
+      cardButton.querySelector('.material-symbols-outlined').textContent=opening?'expand_less':'expand_more';
+      cardButton.querySelector('span:last-child').textContent=opening?'Hide extra dimensions':'Show all dimensions';
+      const category=cardButton.closest('.sail-category');
+      const categoryButton=category.querySelector('.category-expand-toggle');
+      const allOpen=Array.from(category.querySelectorAll('.extra-dimensions')).every(item=>!item.classList.contains('hidden'));
+      categoryButton.querySelector('.material-symbols-outlined').textContent=allOpen?'unfold_less':'unfold_more';
+      categoryButton.querySelector('span:last-child').textContent=allOpen?'Collapse all':'Expand all';
+      return;
+    }
+    const categoryButton=event.target.closest('.category-expand-toggle');
+    if(categoryButton){
+      const category=categoryButton.closest('.sail-category');
+      const extras=Array.from(category.querySelectorAll('.extra-dimensions'));
+      const opening=extras.some(extra=>extra.classList.contains('hidden'));
+      extras.forEach(extra=>extra.classList.toggle('hidden',!opening));
+      category.querySelectorAll('.card-dimensions-toggle').forEach(button=>{
+        button.querySelector('.material-symbols-outlined').textContent=opening?'expand_less':'expand_more';
+        button.querySelector('span:last-child').textContent=opening?'Hide extra dimensions':'Show all dimensions';
+      });
+      categoryButton.querySelector('.material-symbols-outlined').textContent=opening?'unfold_less':'unfold_more';
+      categoryButton.querySelector('span:last-child').textContent=opening?'Collapse all':'Expand all';
+    }
+  });
+  setDataUsageProfile('CRUISING');
+});
+</script>
+</body></html>
