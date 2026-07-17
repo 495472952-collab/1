@@ -1,75 +1,18 @@
 import './style.css'
 
-const sailRows = [
-  ['Standard Main', '1,434 records', 100, 'blue'],
-  ['Full Roach Main', '22 records', 5, 'blue'],
-]
-
-const spinRows = [
-  ['S2', '682 records', 72],
-  ['S1.5', '260 records', 24],
-  ['S1', '201 records', 17],
-  ['S3', '136 records', 12],
-  ['A3', '116 records', 8],
-]
-
-const headRows = [
-  ['J2', '473 records', 25],
-  ['G1', '446 records', 24],
-  ['J1', '222 records', 12],
-  ['J3', '204 records', 11],
-  ['G2', '112 records', 7],
-]
-
-const dimensions = [
-  ['P', 'Mainsail Hoist', '14.79 m'],
-  ['E', 'Mainsail Foot', '5.38 m'],
-  ['I', 'Foretriangle Height', '15.67 m'],
-  ['J', 'Foretriangle Base', '4.41 m'],
-  ['ISP', 'Spinnaker Hoist', '15.92 m'],
-  ['SPL', 'Spinnaker Pole', '4.43 m'],
-  ['BAS', 'Boom Above Sheer', '1.71 m'],
-]
-
-function barRows(rows, color = 'orange') {
-  return rows.map(([name, count, value, customColor]) => `
-    <div class="bar-row">
-      <div class="bar-label"><span>${name}</span><small>${count}</small></div>
-      <div class="track"><span class="bar ${customColor || color}" style="width:${value}%"></span></div>
-    </div>`).join('')
+const dimensions = [['P','Mainsail Hoist','14.79 m'],['E','Mainsail Foot','5.38 m'],['I','Foretriangle Height','15.67 m'],['J','Foretriangle Base','4.41 m'],['ISP','Spinnaker Hoist','15.92 m'],['SPL','Spinnaker Pole','4.43 m'],['BAS','Boom Above Sheer','1.71 m'],['LOA','Length Overall','11.93 m']]
+const sails = {
+  'Upwind Sails': [['Standard Main','All-round mainsail','main'],['Full Roach Main','Specialty mainsail','main'],['J1','Light air upwind','triangle'],['J2','All-round upwind','triangle'],['J3','Heavy air upwind','triangle'],['J4','Heavy air upwind','triangle']],
+  'Reaching Sails': [['G1','Light air upwind','triangle'],['Code 0','Light air reaching','rounded']],
+  'Downwind Sails': [['A1','Reaching asymmetrical','rounded'],['A2','All-round asymmetrical','rounded'],['A3','Reaching asymmetrical','rounded'],['S2','Primary downwind','rounded']]
 }
+const profiles = [['Cruising Essential','A durable, forgiving setup for casual cruising and short-handed sailing.','Standard Main + J2'],['Performance Cruise','The most versatile setup for fast cruising, club racing, and all-around use.','Full Roach Main + J1'],['Race Optimized','A complete and range-ready inventory designed for ORC/IRC racing and crewed events.','Full Roach + A1/S2']]
 
-function rigDiagram() {
-  return `
-    <svg class="rig-svg" viewBox="0 0 470 545" role="img" aria-label="Sailboat rig dimension diagram">
-      <defs><pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M 28 0 L 0 0 0 28" fill="none" stroke="rgba(116,137,176,.16)" stroke-width="1"/></pattern><marker id="arrow" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#dce8f9"/></marker></defs>
-      <rect x="10" y="10" width="450" height="525" rx="14" fill="url(#grid)"/>
-      <path d="M57 465 L230 39 L237 465" class="sail outline"/><path d="M237 43 L403 465" class="sail outline"/><path d="M236 44 L265 464" class="dashed"/>
-      <path d="M232 25 L232 468" class="mast"/><path d="M222 24 L238 24 L238 39 L222 39 Z" class="mast"/>
-      <path d="M55 465 L405 465 Q402 490 370 494 L76 494 Z" class="hull"/>
-      <line x1="197" y1="45" x2="197" y2="461" class="measure"/><line x1="193" y1="45" x2="201" y2="45" class="measure"/><line x1="193" y1="461" x2="201" y2="461" class="measure"/>
-      <line x1="266" y1="69" x2="266" y2="462" class="measure"/><line x1="262" y1="69" x2="270" y2="69" class="measure"/><line x1="262" y1="462" x2="270" y2="462" class="measure"/>
-      <line x1="406" y1="62" x2="406" y2="463" class="measure"/><line x1="402" y1="62" x2="410" y2="62" class="measure"/><line x1="402" y1="463" x2="410" y2="463" class="measure"/>
-      <line x1="79" y1="445" x2="231" y2="445" class="measure"/><line x1="240" y1="476" x2="378" y2="476" class="measure"/><line x1="239" y1="437" x2="378" y2="437" class="measure"/>
-      <text x="134" y="431" class="measure-text white">E 5.38</text><text x="146" y="278" class="measure-text blue-t">P 14.79</text><text x="247" y="313" class="measure-text green-t">I 15.67</text><text x="325" y="319" class="measure-text purple-t">ISP 15.92</text><text x="286" y="465" class="measure-text green-t">J 4.41</text><text x="286" y="424" class="measure-text purple-t">SPL 4.43</text><text x="167" y="486" class="measure-text white small-t">LOA 11.93</text>
-    </svg>`
-}
+function nav(){return `<aside class="sidebar"><a class="brand" href="#">Surg<span>IQ</span></a><nav><a class="active">▦ <span>Boats</span></a><a>⌘ <span>Proposals</span></a><a>◇ <span>Designs</span></a><a>⬡ <span>Orders</span></a></nav></aside>`}
+function sectionTitle(title, text=''){return `<div class="section-heading"><div><p class="eyebrow">${title}</p>${text?`<p class="sub">${text}</p>`:''}</div><button class="text-button">↗&nbsp; EXPAND ALL</button></div>`}
+function dimensionRows(rows){return rows.map(([abbr,name,value])=>`<div class="dimension"><b>${abbr}</b><span>${name}</span><strong>${value}</strong></div>`).join('')}
+function sailCard([name, description, type], index){const selected=index===1||name==='J2'||name==='S2'; return `<article class="sail-card ${selected?'selected':''}"><div class="sail-top"><div><p class="mini-label">${type==='main'?'MAINSAIL':'HEADSAIL'}</p><h3>${name}</h3><p>${description}</p></div><i class="sail-shape ${type}"></i></div><div class="card-tabs"><b>CONFIGURATION</b><span>MEASUREMENTS</span><span>NOTES</span></div><div class="sail-lines"><div><span>LUFF</span><i><em style="width:${48+index%4*9}%"></em></i><strong>${(14.2-index*.3).toFixed(2)} m</strong></div><div><span>LEECH</span><i><em style="width:${39+index%3*11}%"></em></i><strong>${(13.8-index*.2).toFixed(2)} m</strong></div><div><span>FOOT</span><i><em style="width:${35+index%5*7}%"></em></i><strong>${(5.1-index*.1).toFixed(2)} m</strong></div></div><button class="detail">⌄&nbsp; SHOW ALL MEASUREMENTS</button></article>`}
+function profileCard([name,description,inventory],selected){return `<article class="profile ${selected?'recommended':''}">${selected?'<small>RECOMMENDED</small>':''}<p class="mini-label">SAIL INVENTORY</p><h3>${name}</h3><p>${description}</p><div class="profile-list"><span>PRIMARY SAILS</span><b>${inventory}</b><span>SPINNAKER</span><b>S2 + S1.5</b></div><button>${selected?'SELECT PROFILE':'VIEW THIS PROFILE'}</button></article>`}
+function bars(){return `<div class="analytics"><div><p class="mini-label">MAINSAIL SELECTION</p>${[['Standard Main','1,434',98],['Full Roach','22',8]].map(x=>`<div class="barline"><span>${x[0]}</span><b>${x[1]}</b><i><em style="width:${x[2]}%"></em></i></div>`).join('')}</div><div><p class="mini-label">HEADSAIL PREFERENCE</p>${[['J2','473',60],['G1','446',56],['J1','222',28]].map(x=>`<div class="barline green"><span>${x[0]}</span><b>${x[1]}</b><i><em style="width:${x[2]}%"></em></i></div>`).join('')}</div><div><p class="mini-label">SPINNAKER CHOICE</p>${[['S2','682',72],['S1.5','260',28],['S1','201',22]].map(x=>`<div class="barline orange"><span>${x[0]}</span><b>${x[1]}</b><i><em style="width:${x[2]}%"></em></i></div>`).join('')}</div></div>`}
 
-document.querySelector('#app').innerHTML = `
-  <aside class="sidebar">
-    <a class="brand" href="#"><span>Harbor</span><b>IQ</b></a>
-    <nav aria-label="Main navigation">
-      <a href="#"><i>⌘</i>Overview</a><a class="active" href="#boats"><i>⌑</i>Boats</a><a href="#"><i>▤</i>Proposals</a><a href="#"><i>◇</i>Designs</a><a href="#"><i>⬡</i>Orders</a>
-    </nav>
-  </aside>
-  <main class="main-content">
-    <header class="topbar"><button class="menu-button" aria-label="Toggle navigation">☰</button><div class="top-actions"><button>?</button><button>♧</button><button class="profile">aaron⌄</button></div></header>
-    <section class="page">
-      <div class="intro"><a class="back" href="#boats">←&nbsp; Back to Library</a><div class="title-row"><div><h1>FIRST 40.7 <span>01/2008</span></h1><div class="pills"><span>▣&nbsp; 1118 hulls</span><span>⊖&nbsp; 5,168 sail records</span></div></div><button class="primary">▧&nbsp; Start a Proposal</button></div></div>
-      <div class="dashboard-grid">
-        <section class="card analytics"><div class="card-title">▥ <h2>Class Sail Analytics</h2></div><p class="card-copy">Most popular sail configurations found on sisterships.</p><div class="analytics-columns"><div><h3>◱ &nbsp;Mainsail Selection</h3>${barRows(sailRows)}<h3 class="section-title">♠ &nbsp;Spinnaker Choice</h3>${barRows(spinRows)}</div><div><h3>◢ &nbsp;Headsail Preference</h3>${barRows(headRows, 'green')}</div></div></section>
-        <div class="right-column"><section class="card rig"><div class="card-title anchor">⚓ <h2>Rig Diagram</h2></div><div class="diagram">${rigDiagram()}</div></section><section class="card dimensions"><div class="card-title"><h2>Rig Dimensions</h2></div><p class="card-copy">Verify these against client's actual measurements</p><div class="dimension-list">${dimensions.map(([abbr,label,value]) => `<div><b>${abbr}</b><span>${label}</span><strong>${value}</strong></div>`).join('')}</div><h3 class="hull-title">Hull Dimensions</h3><div class="dimension-list"><div><b>LOA</b><span>Length Overall</span><strong>11.93 m</strong></div></div></section></div>
-      </div>
-      <aside class="notice"><b>Note:</b> Rig dimensions shown are from the database and should be used for proposal estimation only. Final measurements must be taken on-site before production.</aside>
-    </section>
-  </main>`
+document.querySelector('#app').innerHTML = `${nav()}<main><header><button class="hamburger">☰</button><div class="toplinks"><a>Report</a><a>Support</a><a>Help</a><a>My Sails</a></div><div class="account">⌕　 AARON ◉</div></header><div class="wrap"><section class="hero"><div class="hero-copy"><p class="mini-label">BOAT LIBRARY / FIRST YACHT DESIGN</p><h1>FIRST 40.7</h1><p class="model">Performance Racer-Cruiser · 1997–2008 · First Yacht Design</p><p class="intro-text">The FIRST 40.7 is a benchmark racer-cruiser designed by Bruce Farr. Blending a competitive hull with versatile sail plans and modern comfort, it remains a popular choice for performance-oriented sailors.</p><div class="stats"><div><b>1,187</b><span>VERIFIED HULLS</span></div><div><b>5,168</b><span>SAIL RECORDS</span></div></div></div><img src="/images/first-407.jpg" alt="Sailing yacht FIRST 40.7"></section><section class="overview panel"><div class="panel-bar"><b>RIG OVERVIEW</b><span>CLASS REFERENCE DATA</span></div><div class="overview-content"><div class="rig-photo"><img src="/images/rig-diagram.png" alt="Sail rig measurements"><a>VIEW FULL RIG DIAGRAM</a></div><div class="rig-measures"><p class="mini-label">RIG DIMENSIONS</p>${dimensionRows(dimensions.slice(0,6))}<p class="mini-label hull-label">HULL DIMENSIONS</p>${dimensionRows(dimensions.slice(7))}</div><div class="confidence"><p class="mini-label">DATA CONFIDENCE</p><h3>REFERENCE SET</h3><div class="confidence-row"><span>Sources analyzed</span><b>5,168</b></div><div class="confidence-row"><span>Boat reports</span><b>4,871</b></div><div class="confidence-row"><span>Confirmed profiles</span><b>786</b></div><div class="confidence-row"><span>Rigged sailboats</span><b>111</b></div><div class="confidence-footer"><span>ESTIMATED RANGE</span><strong>±3%</strong></div></div></div></section><section class="profiles">${sectionTitle('Explore Sailing Profiles','Choose a sailing style to surface the FIRST 40.7 sail recommendations and practical configurations.') }<div class="profile-grid">${profiles.map((p,i)=>profileCard(p,i===1)).join('')}</div></section><aside class="notice">◉&nbsp; ACTIVE SAILOR PROFILE: <b>Performance Cruise</b> | Full Roach Main, J1, all the typical profiles associated with the rig<br><a>EDIT SAILOR PROFILE →</a></aside>${Object.entries(sails).map(([heading,items])=>`<section class="sails">${sectionTitle(heading,heading==='Upwind Sails'?'Built for balance, speed, and pointing ability.':'Recommended designs based on your profile and class data.')}<div class="sail-grid">${items.map((s,i)=>sailCard(s,i)).join('')}</div></section>`).join('')}<section class="technical"><p class="eyebrow">Technical Reference: Sail Tags & Inventory</p><p class="sub">Classifications map quickly to the FIRST 40.7 possible sail options for fitting and recommendation logic.</p><div class="tag-table"><b>Main</b><span>CRUISE</span><span>PERFORMANCE MAIN</span><span>FULL BATTEN</span><span>ROACH</span><b>Headsail</b><span>J1</span><span>J2</span><span>J3</span><span>GENOA</span><b>Spinnaker</b><span>ASYMMETRICAL</span><span>SYMMETRICAL</span><span>CODE 0</span></div></section><section class="class-data">${sectionTitle('Full Class Data: Class Sail Analytics','Detailed sail selection and configurations across all FIRST 40.7 hulls.')}${bars()}</section></div></main>`
